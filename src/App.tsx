@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "styled-components";
 
-function App() {
+import { getTheme } from "services/Theme";
+import { AppRouteList } from "conf/Routes";
+import { LoadingPage } from "views/pages";
+import { UserPreferencesContext, I18nContext } from "views/_functions/Contexts";
+import { useApp } from "views/_functions/Hooks";
+import { GlobalStyle } from "views/_theme/GlobalStyle";
+
+const App = () => {
+  const { userPreferences, i18n, loaded: isAppLoaded } = useApp();
+  console.log("render"); // solo debe salir un render por operacion
+
+  // THINK: considerar persistir el estado de react en localStorage para recuperarlo tras sesiones
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <GlobalStyle />
+      {isAppLoaded ? (
+        <UserPreferencesContext.Provider value={userPreferences}>
+          <I18nContext.Provider value={i18n}>
+            <ThemeProvider theme={getTheme(userPreferences.theme)}>
+              <Router>
+                <Routes>
+                  {AppRouteList.map(route => (
+                    <Route
+                      key={route.id}
+                      path={route.path}
+                      element={route.element}
+                    />
+                  ))}
+                </Routes>
+              </Router>
+            </ThemeProvider>
+          </I18nContext.Provider>
+        </UserPreferencesContext.Provider>
+      ) : (
+        <LoadingPage />
+      )}
+    </>
   );
-}
+};
 
 export default App;
